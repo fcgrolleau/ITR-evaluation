@@ -37,3 +37,42 @@ are_aipw_new <- function(d, i=1:nrow(d)) {
   return(EY_s1 - EY)
 }
 
+
+cb_new <- function(d, i=1:nrow(d)) {
+  z<-d[i,]
+  
+  it_boot <<- it_boot + 1 
+  
+  Deltas <- c()
+  Alpha_seq <- seq(0,.999, by=.1) 
+  mean_imp <- c()
+  
+  # cognitive bias scenario
+
+  z$rho <- with(z, (1- abs(r - ps_hat) )^(.5*log((alpha_cb+1)/(1-alpha_cb))) )
+  Delta <-  mean( with(z, rho*(r - ps_hat ) * ITE_hat))
+  
+  if ( (100*it_boot/resamples) %% 10 == 0) {
+    print(paste0('Iteration alpha ', it, ' Iteration bootstrap ', it_boot, ': ', 100*it_boot/resamples, '%')) }
+  return (Delta)
+}
+
+cl_new <- function(d, i=1:nrow(d)) {
+  z<-d[i,]
+  
+  it_boot <<- it_boot + 1 
+  
+  Deltas <- c()
+  Alpha_seq <- seq(0,.999, by=.1) 
+  mean_imp <- c()
+  
+  # confidence level scenario
+  
+  z$rho <- with(z, (iard - qnorm(1 - alpha_cl/2))*(iard + qnorm(1 - alpha_cl/2)) > 0 )
+  Delta <-  mean( with(z, rho*(r - ps_hat ) * ITE_hat)) 
+  
+  if ( (100*it_boot/resamples) %% 10 == 0) {
+    print(paste0('Iteration alpha ', it, ' Iteration bootstrap ', it_boot, ': ', 100*it_boot/resamples, '%')) }
+  return (Delta)
+} 
+
