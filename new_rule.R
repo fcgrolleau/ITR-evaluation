@@ -1,5 +1,6 @@
 library(boot)
 library(gplots)
+library(latex2exp)
 
 mimic_si <-read.csv("/Users/francois/Desktop/github repos/ITR-evaluation/ITR-evaluation/mimic_si_preds.csv")
 
@@ -55,62 +56,83 @@ quantile(res$t, probs = c(.025, .975))
 ### Delta ITE 
 mean( with(mimic_si, (r - ps_hat ) * ITE_hat))
 
-Deltas <- c()
-Alpha_seq <- abs( seq(0,1, by=.1)-10^(-10) ) 
-mean_imp <- c()
+Deltas_cb <- c()
+Alpha_seq_cb <- seq(0, 1-10^-100, length=10)
+mean_imp_cb <- c()
 resamples <- 100
-boot_ci <- list()
+boot_ci_cb <- list()
 it <- 1
 it_boot <- 0
 resamples <- 100
 
 # cognitive bias scenario
-for (i in Alpha_seq ) {
+for (i in Alpha_seq_cb ) {
   alpha_cb <- i
   mimic_si$rho <- with(mimic_si, (1- abs(r - ps_hat) )^(.5*log((alpha_cb+1)/(1-alpha_cb))) )
-  Deltas <- c(Deltas, mean( with(mimic_si, rho*(r - ps_hat ) * ITE_hat)) )
+  Deltas_cb <- c(Deltas_cb, mean( with(mimic_si, rho*(r - ps_hat ) * ITE_hat)) )
   res <- boot(mimic_si, cb_new, R=resamples )
   it_boot <- 0
-  boot_ci[[it]] <- quantile(res$t, probs = c(.025, .975))
-  mean_imp <- c(mean_imp, mean(mimic_si$rho))
+  boot_ci_cb[[it]] <- quantile(res$t, probs = c(.025, .975))
+  mean_imp_cb <- c(mean_imp_cb, mean(mimic_si$rho))
   it <- it+1
 }
-boot_ci <- sapply(boot_ci, c)
-
-par(mfrow=c(1,2))
-plot(NULL, xlim=c(0,1), ylim=c(min(boot_ci[1,]), max(boot_ci[2,])), bty="n", las=1, xlab="Cognitive Biais Parameter Alpha", ylab="Deltas")
-abline(h = 0, lty=1)
-plotCI(Alpha_seq, Deltas, ui=boot_ci[2,], li=boot_ci[1,], pch=18, gap=0, sfrac=0.003, col="#00a1d5", barcol="black", xlab="", ylab="Deltas", bty="n", add=TRUE)
-
-plot(NULL, xlim=c(0,1), ylim=c(min(boot_ci[1,]), max(boot_ci[2,])), bty="n", yaxt="n", las=1, xlab="Proportion of Patients Implementing The Rule", ylab="")
-abline(h = 0, lty=1)
-plotCI(mean_imp, Deltas, ui=boot_ci[2,], li=boot_ci[1,], pch=18, gap=0, sfrac=0.003, col="#00a1d5", barcol="black", xlab="", ylab="",
-       xlim=c(0, 1), bty="n", yaxt="n", add=TRUE)
+boot_ci_cb <- sapply(boot_ci_cb, c)
 
 # confidence level scenario
-Alpha_seq <- seq(0,1, by=.1) 
-Deltas <- c()
-mean_imp <- c()
-boot_ci <- list()
+Alpha_seq_cl <- c(seq(0, .93, length.out = 3), seq(.94, 1, by=.01) ) 
+Deltas_cl <- c()
+mean_imp_cl <- c()
+boot_ci_cl <- list()
 it <- 1
 it_boot <- 0
-resamples <- 50
+#resamples <- 50
 
-for (i in Alpha_seq ) {
+for (i in Alpha_seq_cl ) {
   alpha_cl <- i
   mimic_si$rho <- with(mimic_si, (iard - qnorm(1 - alpha_cl/2))*(iard + qnorm(1 - alpha_cl/2)) > 0 )
-  Deltas <- c(Deltas, mean( with(mimic_si, rho*(r - ps_hat ) * ITE_hat)) )
+  Deltas_cl <- c(Deltas_cl, mean( with(mimic_si, rho*(r - ps_hat ) * ITE_hat)) )
   res <- boot(mimic_si, cl_new, R=resamples )
   it_boot <- 0
-  boot_ci[[it]] <- quantile(res$t, probs = c(.025, .975))
-  mean_imp <- c(mean_imp, mean(mimic_si$rho))
+  boot_ci_cl[[it]] <- quantile(res$t, probs = c(.025, .975))
+  mean_imp_cl <- c(mean_imp_cl, mean(mimic_si$rho))
   it <- it+1
 }     
-boot_ci <- sapply(boot_ci, c)
+boot_ci_cl <- sapply(boot_ci_cl, c)
 
-par(mfrow=c(1,2))
-plot(Alpha_seq, Deltas)
-plot(mean_imp, Deltas)
+ci_width <- 0.004
+diamond_size <- 2
+lab_size <- 2
+xlab_pos <- 3.7
+ylab_pos <- 3.4
+wl <- 8
+dev.new(width=wl, height=wl, pointsize=7, noRStudioGD = TRUE)
+par(mfcol=c(2,2), mar = c(5.5, 5.9, 2, 2))
+plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
+  xlab="", ylab="")
+title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+abline(h = 0, lty=1, lwd = 2)
+plotCI(Alpha_seq_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
+plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
+     xlab="", ylab="")
+title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+abline(h = 0, lty=1, lwd = 2)
+plotCI(Alpha_seq_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#df8f44ff", barcol="black", add=TRUE)
 
-temp_df <- data.frame(Alpha_cl=sequence, Delta=Deltas)
-temp_df[temp_df$Delta<0, ][1,]
+
+plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
+     xlab="", ylab="")
+title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cb,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+abline(h = 0, lty=1, lwd = 2)
+plotCI(mean_imp_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
+plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
+     xlab="", ylab="")
+title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cl,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+abline(h = 0, lty=1, lwd = 2)
+plotCI(mean_imp_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#df8f44ff", barcol="black", add=TRUE)
+
+
+
