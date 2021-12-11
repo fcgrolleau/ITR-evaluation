@@ -4,7 +4,7 @@ library(latex2exp)
 
 mimic_si <- read.csv("~/Desktop/github repos/Emulated-ITR/Python/data/mimic_si_preds.csv")
 
-#create a variable r_old for an old impolemented rule (SOFA>10)
+#create a variable r_old for an old implemented rule (SOFA>10)
 mimic_si$r_old <- as.numeric(mimic_si$SOFA_24hours >11 )
 
 #create a variable c for concordance between r and the delivered treatment 
@@ -81,7 +81,7 @@ EY_s0
 EY_s1
 EY
 
-resamples <- 100; it <- 0
+resamples <- 200; it <- 0
 res <- boot(mimic_si, ipl_itr_boot, R=resamples)
 
 estimates <- c(ARE_moe, ARE_comb, AIE, MIG)
@@ -110,3 +110,5 @@ mtext(c(TeX(r'($\widehat{\Delta}_{MOE}(r)$)'),
                 TeX(r'($\widehat{\Lambda}(r, \rho)$)'),
                     TeX(r'($\widehat{\Gamma}(r, \rho)$)')
                          ) ,side=2, line=9, at=length(estimates):1, las=1, adj=0)
+
+save.image("implemented_mimic_anlysis.RData")

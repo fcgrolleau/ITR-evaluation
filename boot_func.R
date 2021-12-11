@@ -87,7 +87,7 @@ cl_new <- function(d, i=1:nrow(d)) {
 ipl_itr_boot <- function(d, i=1:nrow(d)) {
   z<-d[i,]
   
-  it_boot <<- it_boot + 1 
+  it <<- it + 1 
 
   #create a variable r_old for an old impolemented rule (SOFA>10)
   z$r_old <- as.numeric(z$SOFA_24hours >11 )
@@ -157,8 +157,8 @@ ipl_itr_boot <- function(d, i=1:nrow(d)) {
   # AIE
   AIE <- EY  - EY_s0
 
-if ( (100*it_boot/resamples) %% 10 == 0) {
-  print(paste0('Iteration bootstrap ', it_boot, ': ', 100*it_boot/resamples, '%')) }
+if ( (100*it/resamples) %% 10 == 0) {
+  print(paste0('Iteration bootstrap ', it, ': ', 100*it/resamples, '%')) }
 return ( c(ARE_moe, ARE_comb, AIE, MIG) )
 }
 
