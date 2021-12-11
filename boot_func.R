@@ -1,3 +1,9 @@
+emp_boot_ci <-  function(t0, t, alpha=.05){
+  # Empirical Bootstrap CI
+  # as described in John Rice, Mathematical Statistics and Data Analysis, 3rd edition, p. 285.        
+  return( as.numeric( c(2*t0 - quantile(t, probs = 1-alpha/2), 2*t0 - quantile(t, probs = alpha/2)) ) )
+}
+
 are_aipw_new <- function(d, i=1:nrow(d)) {
   z<-d[i,]
   
