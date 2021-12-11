@@ -48,7 +48,7 @@ EY <- with(mimic_si, mean(d60d))
 EY_s1 - EY
 
 it <- 0 ; resamples <- 100;
-#res <- boot(mimic_si, are_aipw_new, R=resamples )
+res <- boot(mimic_si, are_aipw_new, R=resamples )
 res
 plot(res)
 quantile(res$t, probs = c(.025, .975))
@@ -110,13 +110,13 @@ par(mfcol=c(2,2), mar = c(5.5, 5.9, 2, 2))
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
   xlab="", ylab="")
 title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
-title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(Alpha_seq_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
 title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
-title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(Alpha_seq_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#df8f44ff", barcol="black", add=TRUE)
 
@@ -124,13 +124,13 @@ plotCI(Alpha_seq_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, ga
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
 title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cb,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
-title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(mean_imp_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
 title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cl,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
-title(ylab=TeX('$\\widehat{\\Delta}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
+title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(mean_imp_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#df8f44ff", barcol="black", add=TRUE)
 
