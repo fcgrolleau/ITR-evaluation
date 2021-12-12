@@ -81,7 +81,7 @@ EY_s0
 EY_s1
 EY
 
-resamples <- 200; it <- 0
+resamples <- 1000; it <- 0
 res <- boot(mimic_si, ipl_itr_boot, R=resamples)
 
 estimates <- c(ARE_moe, ARE_comb, AIE, MIG)
@@ -91,24 +91,25 @@ estimates_ci <- sapply(est_prep, function(x) emp_boot_ci(x[[1]], x[[2]]))
 ##### Make a nice plot
 dev.new(width=6,height=6,pointsize=9)
 par(mar=c(3,10,2,2)+.1, mgp=c(1.75,0.5,0), tcl=-.4)
-xl <- c(-.01, .07)
+xl <- c(-.2, .5)
 yl <- c(0.5,4.5)
 #
 plot(xl,yl,axes=F,type="n",xlab="",ylab="", xaxs="i")
 segments(0,par('usr')[3],0,11)
 segments(estimates_ci[1,],length(estimates):1,estimates_ci[2,],length(estimates):1)
 points(estimates,length(estimates):1, pch=15, col="#00A1D5FF", cex=2)
-axis(1, at=c(seq(from=xl[1], to=xl[2], by=.02),0), labels=c(seq(from=xl[1], to=xl[2], by=.02),0), cex.axis=.8, lwd=0.75, lwd.tick=0.75)
-mtext("Absolute Risk Scale", side=1, line=1.75, cex=1)
+axis(1, at=c(seq(from=xl[1], to=xl[2], by=.1),0), labels=c(seq(from=xl[1], to=xl[2], by=.1),0), cex.axis=.8, lwd=0.75, lwd.tick=0.75)
+mtext("Absolute Risk Difference", side=1, line=1.75, cex=1)
 #
-arrows(c(-.005,.005), 4.5, 7*c(-.005,.005), 4.5, length = 0.07, xpd=TRUE)
-mtext("Favors ITR implementation",side=3, line=-.6, at=-.005, font=1, las=1, adj=1, cex=.8)
-mtext("Favors no ITR implementation",side=3, line=-.6, at=.005, font=1, las=1, adj=0, cex=.8)
-mtext("Estimators",side=1, line=0, at=-.04, font=2, las=1, adj=0)
+arrows(c(-.01,.01), 4.5, 25*c(-.01,.01), 4.5, length = 0.07, xpd=TRUE)
+mtext("Favors ITR implementation",side=3, line=-.6, at=-.01, font=1, las=1, adj=1, cex=.8)
+mtext("Favors no ITR implementation",side=3, line=-.6, at=.01, font=1, las=1, adj=0, cex=.8)
+mtext("Estimators",side=1, line=0, at=-.45, font=2, las=1, adj=0)
 mtext(c(TeX(r'($\widehat{\Delta}_{MOE}(r)$)'),
             TeX(r'($\widehat{\Delta}_{COMB}(r)$)'),
                 TeX(r'($\widehat{\Lambda}(r, \rho)$)'),
                     TeX(r'($\widehat{\Gamma}(r, \rho)$)')
-                         ) ,side=2, line=9, at=length(estimates):1, las=1, adj=0)
+                         ) ,side=2, line=7, at=length(estimates):1, las=1, adj=0)
 
-save.image("implemented_mimic_anlysis.RData")
+#save.image("implemented_mimic_anlysis.RData")
+
