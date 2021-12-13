@@ -2,6 +2,7 @@ library(boot)
 library(gplots)
 library(latex2exp)
 
+set.seed(324)
 mimic_si <-read.csv("/Users/francois/Desktop/github repos/ITR-evaluation/ITR-evaluation/mimic_si_preds.csv")
 
 # Create concrdance variable hfd
@@ -51,7 +52,7 @@ it <- 0 ; resamples <- 100;
 res <- boot(mimic_si, are_aipw_new, R=resamples )
 res
 plot(res)
-quantile(res$t, probs = c(.025, .975))
+emp_boot_ci(res$t0, res$t)
 
 ### Delta ITE 
 mean( with(mimic_si, (r - ps_hat ) * ITE_hat))
@@ -107,14 +108,18 @@ ylab_pos <- 3.4
 wl <- 8
 dev.new(width=wl, height=wl, pointsize=7, noRStudioGD = TRUE)
 par(mfcol=c(2,2), mar = c(5.5, 5.9, 2, 2))
+
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
   xlab="", ylab="")
-title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
+mtext("A",side=3, line=0, at=-.15, font=1, las=1, adj=1, cex=2)
+title(xlab="", line=xlab_pos, cex.lab=lab_size)
 title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(Alpha_seq_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
+
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
+mtext("C",side=3, line=0, at=-.15, font=1, las=1, adj=1, cex=2)
 title(xlab=TeX('$\\alpha$'), line=xlab_pos, cex.lab=lab_size)
 title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
@@ -123,13 +128,16 @@ plotCI(Alpha_seq_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, ga
 
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
-title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cb,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
+mtext("B",side=3, line=0, at=-.15, font=1, las=1, adj=1, cex=2)
+title(xlab="", line=xlab_pos, cex.lab=lab_size*.9)
 title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cb,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(mean_imp_cb, Deltas_cb, ui=boot_ci_cb[2,], li=boot_ci_cb[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#00a1d5ff", barcol="black", add=TRUE)
+
 plot(NULL, xlim=c(0,1), ylim=round(c(min(c(boot_ci_cl, boot_ci_cb)), max(c(boot_ci_cl, boot_ci_cb))), 3), bty="n", las=1,
      xlab="", ylab="")
-title(xlab=TeX(r'($\widehat{\mathbf{E}}\{\rho_{cl,\alpha}(X)\}$)'), line=xlab_pos, cex.lab=lab_size)
+mtext("D",side=3, line=0, at=-.15, font=1, las=1, adj=1, cex=2)
+title(xlab="Proportion of patients implementing the new ITR", line=xlab_pos, cex.lab=lab_size*.9)
 title(ylab=TeX('$\\widehat{\\Lambda}_{ITE}(r,\\rho_{cl,\\alpha})$'), line=ylab_pos, cex.lab=lab_size)
 abline(h = 0, lty=1, lwd = 2)
 plotCI(mean_imp_cl, Deltas_cl, ui=boot_ci_cl[2,], li=boot_ci_cl[1,], pch=18, gap=0, cex=diamond_size, sfrac=ci_width, col="#df8f44ff", barcol="black", add=TRUE)

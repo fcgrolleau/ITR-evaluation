@@ -1,8 +1,9 @@
 library(MASS)
 expit <- function(x) 1 / (1+exp(-x))
 
+set.seed(657)
 # Sample size
-n <- 1000
+n <- 10000
 
 # True parameters
 lx1 <- 1 ; lx2 <- 2; lx3 <- 3;
@@ -51,7 +52,7 @@ library(flexmix)
 
 Model <- FLXMRglmfix(fixed = ~ -1, formula =  ~ -1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7, family = "binomial")
                          
-concomitantModel <- FLXPmultinom(~ ~ 1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7)
+concomitantModel <-FLXPmultinom(~ ~ 1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7)
 
 Moe <- stepFlexmix(cbind(Y, 1 - Y) ~  1,
                k = 2, model = Model,

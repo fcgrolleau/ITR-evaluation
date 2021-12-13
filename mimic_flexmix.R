@@ -2,6 +2,8 @@ library(flexmix)
 library(boot)
 library(latex2exp)
 
+set.seed(4321)
+
 mimic_si <- read.csv("~/Desktop/github repos/Emulated-ITR/Python/data/mimic_si_preds.csv")
 
 #create a variable r_old for an old implemented rule (SOFA>10)
@@ -104,7 +106,7 @@ mtext("Absolute Risk Difference", side=1, line=1.75, cex=1)
 arrows(c(-.01,.01), 4.5, 25*c(-.01,.01), 4.5, length = 0.07, xpd=TRUE)
 mtext("Favors ITR implementation",side=3, line=-.6, at=-.01, font=1, las=1, adj=1, cex=.8)
 mtext("Favors no ITR implementation",side=3, line=-.6, at=.01, font=1, las=1, adj=0, cex=.8)
-mtext("Estimators",side=1, line=0, at=-.45, font=2, las=1, adj=0)
+mtext("Estimates",side=1, line=0, at=-.45, font=2, las=1, adj=0)
 mtext(c(TeX(r'($\widehat{\Delta}_{MOE}(r)$)'),
             TeX(r'($\widehat{\Delta}_{COMB}(r)$)'),
                 TeX(r'($\widehat{\Lambda}(r, \rho)$)'),
