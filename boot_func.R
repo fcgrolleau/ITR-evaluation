@@ -124,7 +124,7 @@ ipl_itr_boot <- function(d, i=1:nrow(d)) {
   
   ## E_Y^{s=0}
   Model <- FLXMRglmfix(fixed = ~ 1, formula =  ~ -1 + admission_age +  SOFA_24hours + weight + bun_k1 + ph_k1 + pot_k1, family = "binomial")
-  concomitantModel <- FLXPmultinom(~ ~ 1 + admission_age + bun_k1 + ph_k1 + pot_k1)
+  concomitantModel <- FLXPmultinom(~ ~ 1 + admission_age + bun_k1 + ph_k1 + pot_k1 + c)
   
   Moe <- stepFlexmix(cbind(d60d, 1 - d60d) ~ 1,
                      k = 2, model = Model,

@@ -41,7 +41,7 @@ EY_s1 <- mean( with(mimic_si, c*d60d / ps_hat_d - pon_hat_d*(c-ps_hat_d)/ps_hat_
 
 ## E_Y^{s=0}
 Model <- FLXMRglmfix(fixed = ~ 1, formula =  ~ -1 + admission_age +  SOFA_24hours + weight + bun_k1 + ph_k1 + pot_k1, family = "binomial")
-concomitantModel <- FLXPmultinom(~ ~ 1 + admission_age + bun_k1 + ph_k1 + pot_k1)
+concomitantModel <- FLXPmultinom(~ ~ 1 + admission_age + bun_k1 + ph_k1 + pot_k1 + c)
 
 Moe <- stepFlexmix(cbind(d60d, 1 - d60d) ~ 1,
                    k = 2, model = Model,
@@ -113,5 +113,5 @@ mtext(c(TeX(r'($\widehat{\Delta}_{MOE}(r)$)'),
                     TeX(r'($\widehat{\Gamma}(r, \rho)$)')
                          ) ,side=2, line=7, at=length(estimates):1, las=1, adj=0)
 
-#save.image("implemented_mimic_anlysis.RData")
+save.image("implemented_mimic_anlysis.RData")
 
