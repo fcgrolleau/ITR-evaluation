@@ -12,7 +12,7 @@ o_g_z_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
 o_g_o_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
 top_gate_vars <- c("X.7")
 
-sd <- 1000000
+sd <- 100000000
   
 z_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2)  + rnorm(length(expert_vars), sd = sd)
 o_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2) *-1 + rnorm(length(expert_vars), sd = sd)
@@ -26,7 +26,7 @@ o_g_z_gate_param <- rnorm(length(o_g_z_gate_vars), sd = sd) #c(.05, -.5, .5, -.5
 o_g_o_gate_param <- rnorm(length(o_g_o_gate_vars), sd = sd)
 ###
 
-epsilon <- .05
+epsilon <- .01
 maxit <- 100
 for(i in 1:maxit) {
 # h_i's
