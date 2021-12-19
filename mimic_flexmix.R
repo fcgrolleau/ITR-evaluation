@@ -113,5 +113,5 @@ mtext(c(TeX(r'($\widehat{\Delta}_{MOE}(r)$)'),
                     TeX(r'($\widehat{\Gamma}(r, \rho)$)')
                          ) ,side=2, line=7, at=length(estimates):1, las=1, adj=0)
 
-save.image("implemented_mimic_anlysis.RData")
+#save.image("implemented_mimic_anlysis.RData")
 

@@ -3,7 +3,7 @@ expit <- function(x) 1 / (1+exp(-x))
 
 set.seed(573)
 # Sample size
-n <- 1000
+n <- 1000000
 
 # True parameters for the Xs
 lx1 <- 1 ; lx2 <- 2; lx3 <- 3;
@@ -13,7 +13,7 @@ lx4 <- 4 ; lx5 <- 3; lx6 <- 2
 alpha <- c(0, -3, -.5, 5, -1.5, -2, 1)
 
 # True parameters for Ys0|X=x
-beta <- alpha * c(1,1,1,3,1,1,2)
+beta <- alpha * c(1,1,1,2,1,1,2)
 
 # True parameters for S|X=x
 gamma <- c(-.1, 1, -1, 1, -1, 1, -1)*1
@@ -74,23 +74,23 @@ table(dat$S)
 ### Test MOE No. 1
 library(flexmix)
 
-Model <- FLXMRglmfix(fixed = ~ 1, formula =  ~ -1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7, family = "binomial")
+Model <- FLXMRglmfix(fixed = ~ -1, formula =  ~ -1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7, family = "binomial")
                          
-concomitantModel <- FLXPmultinom(~ ~ 1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7 + C)
+concomitantModel <-  as.factor(dat$S) #FLXPmultinom(~ ~ -1 + S)
 
 Moe <- stepFlexmix(cbind(Y, 1 - Y) ~  1,
                k = 2, model = Model,
-               concomitant = concomitantModel, data = dat, nrep = 3)
+               concomitant = FLXPmultinom(~ -1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7), data = dat, nrep = 3)
 
-refit_Moe <- refit(Moe)
-summary(refit_Moe)
+#refit_Moe <- refit(Moe)
+#summary(refit_Moe)
 
 exp_coef <- parameters(Moe, which="model")
 gate_coef <- parameters(Moe, which="concomitant")
 exp_coef
 gate_coef
 
-temp <- model.matrix(~ 1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7, dat)
+temp <- model.matrix(~ -1 + X.2 + X.3 + X.4 + X.5 + X.6 + X.7, dat)
 EY_s0s <- c(mean(expit(temp %*% exp_coef[,1])), mean(expit(temp %*% exp_coef[,2])) )
 EY_s0s
 TrueVals
