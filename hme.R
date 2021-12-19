@@ -6,31 +6,13 @@ dat$S_sign <- with(dat, ifelse(S==0, -1, S))
 
 expit <- function(x) 1 / (1+exp(-x))
 
-expert_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5", "X.6", "X.7")
-o_g_z_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5", "X.6", "X.7")
-o_g_o_gate_vars <- c("r_sign")
-
-top_gate_vars <- c("S_sign")
-  
-# Initate parameters
-z_g_z_expert_param <- c(0, -3, -.5, 5, -1.5, -2, 0)
-o_g_z_expert_param <- c(0, -3, -.5, 5, -1.5, -2, 0) *-1
-
-z_g_o_expert_param <- c(0, -3, -.5, 5, -1.5, -2, 0) 
-o_g_o_expert_param <- c(0, -3, -.5, 5, -1.5, -2, 0) * -1
-
-top_gate_param <- c(10000)
-
-o_g_z_gate_param <- c(.05, -.5, .5, -.5, .5, .0, 0)
-o_g_o_gate_param <- 99999
-
 ###
 expert_vars <- c("X.2", "X.3", "X.4", "X.5", "X.6")
 o_g_z_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
-o_g_o_gate_vars <- c("r_sign")
+o_g_o_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
 top_gate_vars <- c("X.7")
 
-sd <- 1
+sd <- 1000000
   
 z_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2)  + rnorm(length(expert_vars), sd = sd)
 o_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2) *-1 + rnorm(length(expert_vars), sd = sd)
@@ -41,11 +23,11 @@ o_g_o_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, 
 top_gate_param <- rnorm(length(top_gate_vars), sd = sd)
 
 o_g_z_gate_param <- rnorm(length(o_g_z_gate_vars), sd = sd) #c(.05, -.5, .5, -.5, .5) + rnorm(length(o_g_z_gate_vars), sd = sd)
-o_g_o_gate_param <- 99999
+o_g_o_gate_param <- rnorm(length(o_g_o_gate_vars), sd = sd)
 ###
 
 epsilon <- .05
-maxit <- 2000
+maxit <- 100
 for(i in 1:maxit) {
 # h_i's
 
@@ -129,8 +111,8 @@ z_g_o_expert_mod <- glm(f_experts, weights = h_o * h_z_g_o, family = "quasibinom
 o_g_o_expert_mod <- glm(f_experts, weights = h_o * h_o_g_o, family = "quasibinomial", data=dat, method = glm.fit)
 
 # step 3
-#f_topgate <- formula(paste0("h_o ~ -1 +", paste(top_gate_vars, collapse=" + ")))
-#top_gate_mod <- glm(f_topgate, family = "quasibinomial", data = dat, method = glm.fit) # Not fit for debugging
+f_topgate <- formula(paste0("h_o ~ -1 +", paste(top_gate_vars, collapse=" + ")))
+top_gate_mod <- glm(f_topgate, family = "quasibinomial", data = dat, method = glm.fit) # Not fit for debugging
 
 # step 4
 f_o_g_z_gate <- formula(paste0("h_o_g_z ~ -1 +", paste(o_g_z_gate_vars, collapse=" + ")))
@@ -142,8 +124,8 @@ o_g_z_gate_mod <- glm(f_o_g_z_gate, weights = h_z, family = "quasibinomial", dat
 
 # step 5 update parameters
 
-new_thetas <- c(coef(z_g_z_expert_mod), coef(o_g_z_expert_mod), coef(z_g_o_expert_mod), coef(o_g_o_expert_mod), coef(o_g_z_gate_mod))
-old_thetas <- c(z_g_z_expert_param, o_g_z_expert_param, z_g_o_expert_param, o_g_o_expert_param, o_g_z_gate_param)
+new_thetas <- c(coef(z_g_z_expert_mod), coef(o_g_z_expert_mod), coef(z_g_o_expert_mod), coef(o_g_o_expert_mod), coef(o_g_z_gate_mod))# coef(top_gate_mod), coef(o_g_o_gate_mod))
+old_thetas <- c(z_g_z_expert_param, o_g_z_expert_param, z_g_o_expert_param, o_g_o_expert_param, o_g_z_gate_param)# top_gate_param, o_g_o_gate_param)
 
 conv <- norm(new_thetas-old_thetas, type = "2")
 if (conv > epsilon) {
@@ -154,7 +136,7 @@ o_g_z_expert_param <- coef(o_g_z_expert_mod)
 z_g_o_expert_param <- coef(z_g_o_expert_mod)
 o_g_o_expert_param <- coef(o_g_o_expert_mod)
 
-#top_gate_param <- coef(top_gate_mod) # No update for debugging
+top_gate_param <- coef(top_gate_mod) # No update for debugging
 
 o_g_z_gate_param <- coef(o_g_z_gate_mod)
 #o_g_o_gate_param <- coef(o_g_o_gate_mod) # only if this need be updated
@@ -190,3 +172,4 @@ mean(
 
 matplot(as.matrix(data.frame(Ys0_hat = Ys0_hat, Ys1_hat = Ys1_hat)), type = c("b"),pch=1, col = 1:2)
 data.frame(Hats=c(tail(Ys0_hat,1), tail(Ys1_hat,1)), True=c(TrueVals["Y_s0"], TrueVals["Y_s1"]) )
+

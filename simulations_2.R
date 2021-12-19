@@ -4,7 +4,7 @@ expit <- function(x) 1 / (1+exp(-x))
 
 set.seed(353)
 # Sample size
-n <- 1000
+n <- 10000
 
 # True parameters for the Xs
 lx2 <- 1 ; lx3 <- 1; lx4 <- 1;
@@ -17,7 +17,7 @@ alpha <- c(0, -3, -.5, 5, -1.5, -2, 0)
 beta <- alpha * -1
 
 # True parameters for S|X=x
-gamma <- c(0, 0, 0, 0, 0, 0, 10000)
+gamma <- c(0, 0, 0, 0, 0, 0, 10)
 
 # True parameters for r(X)
 delta <- c(.05, -.5, .5, -.5, .5, .0, 0)
@@ -73,7 +73,7 @@ return(data.frame(X=X, rho=rho, S=S, Pr_Ya1=Pr_Ya1, Pr_Ya0=Pr_Ya0, Y_s1=Y_s1, Y_
 largeN <- 10^6
 TrueVals <- apply(dgp(largeN, alpha, beta, gamma, delta, zeta)[, c("Y_s1", "Y_s0", "Y", "Pr_Ya0", "Pr_Ya1")], 2, mean) 
 TrueVals
-dat <- dgp(n, alpha, beta, gamma, delta, zeta)
+dat <- dgp(10000, alpha, beta, gamma, delta, zeta)
 table(dat$S)
 gamma
 
