@@ -31,75 +31,35 @@ o_g_o_gate_param <- rnorm(length(o_g_o_gate_vars), sd = sd)
 epsilon <- 1
 maxit <- 100
 for(i in 1:maxit) {
-# h_i's
+  ### h_i's
 
-dat$h_o <- expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param) *
-  (
-    expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) *
-      expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
-    
-    + 
-      
-      ( 1 - expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) ) *
-      expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
-  )  / (
-( 1 - expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param) ) *
-  (
-expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) *
-expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
- 
-+ 
-
-( 1 - expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) ) *
-expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
-  ) +
-
- expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param) *
-   (
-    expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) *
-      expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
-    
-    + 
-      
-      ( 1 - expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) ) *
-      expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
-  ) )
-
-dat$h_z <- 1 - dat$h_o
-
-### h_j_g_i's
-
-dat$h_z_g_z <- 
-
-( 1 - expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) ) *
-  expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param) / (
-    
-  ( 1 - expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) ) *
-    expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
+  g_o <- expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param)
+  g_z <- 1 - g_o
+  g_o_g_o <- expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param)
+  g_z_g_o <- 1 - g_o_g_o
+  p_o_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
+  p_o_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
   
-  + 
-    
-    expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) *
-    expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
-)
-
-dat$h_o_g_z <-  1 - dat$h_z_g_z
-
-dat$h_z_g_o <- 
+  g_o_g_z <- expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param)
+  g_z_g_z <- 1 - g_o_g_z
+  p_z_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
+  p_z_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
   
-  ( 1 - expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) ) *
-  expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param) / (
-    
-    ( 1 - expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) ) *
-      expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
-    
-    + 
-      
-      expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) *
-      expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
-  )
+  numerator <- g_o * (g_o_g_o * p_o_o + g_z_g_o * p_o_z )
+  denominator <- numerator + g_z * (g_o_g_z * p_z_o + g_z_g_z * p_z_z )
+  dat$h_o <- numerator / denominator
+  dat$h_z <- 1 - dat$h_o 
 
-dat$h_o_g_o <- 1 - dat$h_z_g_o
+  ### h_j_g_i's
+  numerator <- g_z_g_z * p_z_z
+  denominator <- numerator + g_o_g_z * p_z_o
+  dat$h_z_g_z <- numerator / denominator
+  dat$h_o_g_z <-  1 - dat$h_z_g_z
+  
+  numerator <- g_z_g_o * p_o_z
+  denominator <- numerator + g_o_g_o * p_o_o
+  dat$h_z_g_o <- numerator / denominator
+  dat$h_o_g_o <- 1 - dat$h_z_g_o
 
 ### M STEP
 
