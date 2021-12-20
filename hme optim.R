@@ -3,139 +3,151 @@ library(latex2exp)
 Ys0_hat <- c()
 Ys1_hat <- c()
 
-dat$r_sign <- with(dat, ifelse(r==0, -1, r))
-dat$S_sign <- with(dat, ifelse(S==0, -1, S))
-
 expit <- function(x) 1 / (1+exp(-x))
 
 ###
-expert_vars <- c("X.2", "X.3", "X.4", "X.5", "X.6")
-o_g_z_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
-o_g_o_gate_vars <- c("X.1", "X.2", "X.3", "X.4", "X.5")
-top_gate_vars <- c("X.7")
+hme <- function(dat, 
+         expert_vars = c("X.2", "X.3", "X.4", "X.5", "X.6"), 
+         top_gate_vars = c("X.7"), 
+         o_g_z_gate_vars = c("X.1", "X.2", "X.3", "X.4", "X.5"), 
+         o_g_o_gate_vars = c("X.1", "X.2", "X.3", "X.4", "X.5"),
+         epsilon=.5, maxit=10, seed=123, verbose=TRUE) {
 
+set.seed(seed)  
 sd <- 100000000
+
+reached_maxit <- FALSE
+converged <- FALSE
+
+while(reached_maxit==FALSE & converged==FALSE) {
+try({
   
-z_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2)  + rnorm(length(expert_vars), sd = sd)
-o_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2) *-1 + rnorm(length(expert_vars), sd = sd)
-
-z_g_o_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2) + rnorm(length(expert_vars), sd = sd)
-o_g_o_expert_param <- rnorm(length(expert_vars), sd = sd) # c(-3, -.5, 5, -1.5, -2) *-1 + rnorm(length(expert_vars), sd = sd)
-
-top_gate_param <- rnorm(length(top_gate_vars), sd = sd)
-
-o_g_z_gate_param <- rnorm(length(o_g_z_gate_vars), sd = sd) #c(.05, -.5, .5, -.5, .5) + rnorm(length(o_g_z_gate_vars), sd = sd)
-o_g_o_gate_param <- rnorm(length(o_g_o_gate_vars), sd = sd)
-###
-
-epsilon <- 1
-maxit <- 100
-for(i in 1:maxit) {
-  ### h_i's
-
-  g_o <- expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param)
-  g_z <- 1 - g_o
-  g_o_g_o <- expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param)
-  g_z_g_o <- 1 - g_o_g_o
-  p_o_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
-  p_o_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
+  z_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) 
+  o_g_z_expert_param <- rnorm(length(expert_vars), sd = sd) 
   
-  g_o_g_z <- expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param)
-  g_z_g_z <- 1 - g_o_g_z
-  p_z_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
-  p_z_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
+  z_g_o_expert_param <- rnorm(length(expert_vars), sd = sd) 
+  o_g_o_expert_param <- rnorm(length(expert_vars), sd = sd) 
   
-  numerator <- g_o * (g_o_g_o * p_o_o + g_z_g_o * p_o_z )
-  denominator <- numerator + g_z * (g_o_g_z * p_z_o + g_z_g_z * p_z_z )
-  dat$h_o <- numerator / denominator
-  dat$h_z <- 1 - dat$h_o 
-
-  ### h_j_g_i's
-  numerator <- g_z_g_z * p_z_z
-  denominator <- numerator + g_o_g_z * p_z_o
-  dat$h_z_g_z <- numerator / denominator
-  dat$h_o_g_z <-  1 - dat$h_z_g_z
+  top_gate_param <- rnorm(length(top_gate_vars), sd = sd)
   
-  numerator <- g_z_g_o * p_o_z
-  denominator <- numerator + g_o_g_o * p_o_o
-  dat$h_z_g_o <- numerator / denominator
-  dat$h_o_g_o <- 1 - dat$h_z_g_o
-
-### M STEP
-
-# step 2
-f_experts <- formula(paste0("Y ~ -1 +", paste(expert_vars, collapse=" + ")))
-
-z_g_z_expert_mod <- glm(f_experts, weights = h_z * h_z_g_z, family = "quasibinomial", data=dat, method = glm.fit)
-o_g_z_expert_mod <- glm(f_experts, weights = h_z * h_o_g_z, family = "quasibinomial", data=dat, method = glm.fit)
-
-z_g_o_expert_mod <- glm(f_experts, weights = h_o * h_z_g_o, family = "quasibinomial", data=dat, method = glm.fit)
-o_g_o_expert_mod <- glm(f_experts, weights = h_o * h_o_g_o, family = "quasibinomial", data=dat, method = glm.fit)
-
-# step 3
-f_topgate <- formula(paste0("h_o ~ -1 +", paste(top_gate_vars, collapse=" + ")))
-top_gate_mod <- glm(f_topgate, family = "quasibinomial", data = dat, method = glm.fit) # Not fit for debugging
-
-# step 4
-f_o_g_z_gate <- formula(paste0("h_o_g_z ~ -1 +", paste(o_g_z_gate_vars, collapse=" + ")))
-o_g_z_gate_mod <- glm(f_o_g_z_gate, weights = h_z, family = "quasibinomial", data = dat)
-
-#f_o_g_o_gate <- formula(paste0("h_o_g_o ~ -1 +", paste(o_g_o_gate_vars, collapse=" + ")))  # only if this need be updated
-#o_g_o_gate_mod <- lm(f_o_g_o_gate, weights = h_o, data = dat)  # only if this need be updated
-
-
-# step 5 update parameters
-
-new_thetas <- c(coef(z_g_z_expert_mod), coef(o_g_z_expert_mod), coef(z_g_o_expert_mod), coef(o_g_o_expert_mod), coef(o_g_z_gate_mod))# coef(top_gate_mod), coef(o_g_o_gate_mod))
-old_thetas <- c(z_g_z_expert_param, o_g_z_expert_param, z_g_o_expert_param, o_g_o_expert_param, o_g_z_gate_param)# top_gate_param, o_g_o_gate_param)
-
-conv <- norm(new_thetas-old_thetas, type = "2")
-if (conv > epsilon) {
-
-z_g_z_expert_param <- coef(z_g_z_expert_mod)
-o_g_z_expert_param <- coef(o_g_z_expert_mod)
-
-z_g_o_expert_param <- coef(z_g_o_expert_mod)
-o_g_o_expert_param <- coef(o_g_o_expert_mod)
-
-top_gate_param <- coef(top_gate_mod) # No update for debugging
-
-o_g_z_gate_param <- coef(o_g_z_gate_mod)
-#o_g_o_gate_param <- coef(o_g_o_gate_mod) # only if this need be updated
-} else break
-
-### Debugging
-print(paste(i, format(round(conv,2), nsmall = 2) ))
-
-Ys1_hat <- c(Ys1_hat, 
-mean   (
-  expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) *
-    expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
+  o_g_z_gate_param <- rnorm(length(o_g_z_gate_vars), sd = sd) 
+  o_g_o_gate_param <- rnorm(length(o_g_o_gate_vars), sd = sd)
+  ###
   
-  + 
+  for(i in 1:maxit) {
+    ### h_i's
+  
+    g_o <- expit(as.matrix(dat[top_gate_vars]) %*% top_gate_param)
+    g_z <- 1 - g_o
     
-    ( 1 - expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param) ) *
-    expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
-)
-)
-
-Ys0_hat <- c(Ys0_hat,
-mean(  
-  expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) *
-    expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
-  
-  + 
+    g_o_g_o <- expit(as.matrix(dat[o_g_o_gate_vars]) %*% o_g_o_gate_param)
+    g_z_g_o <- 1 - g_o_g_o
     
-    ( 1 - expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param) ) *
-    expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
-)
-)
+    g_o_g_z <- expit(as.matrix(dat[o_g_z_gate_vars]) %*% o_g_z_gate_param)
+    g_z_g_z <- 1 - g_o_g_z
+    
+    p_o_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_o_expert_param)
+    p_o_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_o_expert_param)
+    
+    p_z_o <- expit(as.matrix(dat[expert_vars]) %*% o_g_z_expert_param)
+    p_z_z <- expit(as.matrix(dat[expert_vars]) %*% z_g_z_expert_param)
+    
+    numerator <- g_o * (g_o_g_o * p_o_o + g_z_g_o * p_o_z )
+    denominator <- numerator + g_z * (g_o_g_z * p_z_o + g_z_g_z * p_z_z )
+    dat$h_o <- numerator / denominator
+    dat$h_z <- 1 - dat$h_o 
+  
+    ### h_j_g_i's
+    numerator <- g_z_g_z * p_z_z
+    denominator <- numerator + g_o_g_z * p_z_o
+    dat$h_z_g_z <- numerator / denominator
+    dat$h_o_g_z <-  1 - dat$h_z_g_z
+    
+    numerator <- g_z_g_o * p_o_z
+    denominator <- numerator + g_o_g_o * p_o_o
+    dat$h_z_g_o <- numerator / denominator
+    dat$h_o_g_o <- 1 - dat$h_z_g_o
+  
+  ### M STEP
+  
+  # step 2
+  f_experts <- formula(paste0("Y ~ -1 +", paste(expert_vars, collapse=" + ")))
+  
+  z_g_z_expert_mod <- glm(f_experts, weights = h_z * h_z_g_z, family = "quasibinomial", data=dat, method = glm.fit)
+  o_g_z_expert_mod <- glm(f_experts, weights = h_z * h_o_g_z, family = "quasibinomial", data=dat, method = glm.fit)
+  
+  z_g_o_expert_mod <- glm(f_experts, weights = h_o * h_z_g_o, family = "quasibinomial", data=dat, method = glm.fit)
+  o_g_o_expert_mod <- glm(f_experts, weights = h_o * h_o_g_o, family = "quasibinomial", data=dat, method = glm.fit)
+  
+  # step 3
+  f_topgate <- formula(paste0("h_o ~ -1 +", paste(top_gate_vars, collapse=" + ")))
+  top_gate_mod <- glm(f_topgate, family = "quasibinomial", data=dat, method = glm.fit) # Not fit for debugging
+  
+  # step 4
+  f_o_g_z_gate <- formula(paste0("h_o_g_z ~ -1 +", paste(o_g_z_gate_vars, collapse=" + ")))
+  o_g_z_gate_mod <- glm(f_o_g_z_gate, weights = h_z, family = "quasibinomial", data=dat, method = glm.fit)
+  
+  f_o_g_o_gate <- formula(paste0("h_o_g_o ~ -1 +", paste(o_g_o_gate_vars, collapse=" + ")))  # only if this need be updated
+  o_g_o_gate_mod <- glm(f_o_g_o_gate, family = "quasibinomial", data=dat, method = glm.fit)  # only if this need be updated
+  
+  
+  # step 5 update parameters
+  
+  new_thetas <- c(coef(z_g_z_expert_mod), coef(o_g_z_expert_mod), coef(z_g_o_expert_mod), coef(o_g_o_expert_mod), coef(o_g_z_gate_mod), coef(top_gate_mod), coef(o_g_o_gate_mod))
+  old_thetas <- c(z_g_z_expert_param, o_g_z_expert_param, z_g_o_expert_param, o_g_o_expert_param, o_g_z_gate_param, top_gate_param, o_g_o_gate_param)
+  
+  conv <- norm(new_thetas-old_thetas, type = "2")
+  if (conv > epsilon) {
+  
+  z_g_z_expert_param <- coef(z_g_z_expert_mod)
+  o_g_z_expert_param <- coef(o_g_z_expert_mod)
+  
+  z_g_o_expert_param <- coef(z_g_o_expert_mod)
+  o_g_o_expert_param <- coef(o_g_o_expert_mod)
+  
+  top_gate_param <- coef(top_gate_mod) # No update for debugging
+  
+  o_g_z_gate_param <- coef(o_g_z_gate_mod)
+  o_g_o_gate_param <- coef(o_g_o_gate_mod) # only if this need be updated
+  } else { converged <- TRUE 
+          break }
+  
+  ### Debugging
+  if(verbose==TRUE) { print(paste(i, format(round(conv,2), nsmall = 2) )) }
+  
+  
+  Ys1_hat <- c(Ys1_hat, mean(g_o_g_o * p_o_o + g_z_g_o * p_o_z))
+  
+  Ys0_hat <- c(Ys0_hat, mean(g_o_g_z * p_z_o + g_z_g_z * p_z_z))
+  
+  if(i==maxit) { reached_maxit <- TRUE  }
+  }
+
+}, silent=TRUE)
+
+}
+if(reached_maxit) {print("Reached maximum number of iterations")}
+if(converged) {print("Algorithm converged")}
+return(data.frame(Yk0_hat = Ys0_hat, Yk1_hat = Ys1_hat))
 }
 
+
+res <- hme(dat, 
+           expert_vars = c("X.2", "X.3", "X.4", "X.5", "X.6"), 
+           top_gate_vars = c("X.7"), 
+           o_g_z_gate_vars = c("X.1", "X.2", "X.3", "X.4", "X.5"), 
+           o_g_o_gate_vars = c("X.1", "X.2", "X.3", "X.4", "X.5"),
+           epsilon=100, maxit=50, seed=123, verbose=TRUE)
+
+plot.hme <- function(res){
 par(mar = c(5, 5, 2, 2))
-matplot(as.matrix(data.frame(Ys0_hat = Ys0_hat, Ys1_hat = Ys1_hat)), type = c("b"), pch=16, cex=.5, col = c("#DF8F44FF", "#00A1D5FF"), las=1, bty="n",
-        ylim=c(0,1), xlim=c(0, length(Ys0_hat)), 
-        xlab = "EM iteration", ylab=TeX(r'($\widehat{E}\[Y^{s=0}\] \\; and \\;  \widehat{E}\[Y^{s=1}\]$)'), 
-        main="Estimates identity is not defined")
-data.frame(Hats=c(tail(Ys0_hat,1), tail(Ys1_hat,1)), True=c(TrueVals["Y_s0"], TrueVals["Y_s1"]) )
+matplot(as.matrix(res), type = c("b"), pch=16, cex=.5, col = c("#DF8F44FF", "#00A1D5FF"), las=1, bty="n",
+        ylim=c(0,1), xlim=c(0, nrow(res)), 
+        xlab = "EM iteration", ylab=TeX(r'($\widehat{E}\[Y^{k=0}\] \\; and \\;  \widehat{E}\[Y^{k=1}\]$)'), 
+        main="HME convergence")
+}
+
+plot.hme(res)
+
+data.frame(Hats=as.numeric(tail(res,1)), True=c(TrueVals["Y_s0"], TrueVals["Y_s1"]) )
 
