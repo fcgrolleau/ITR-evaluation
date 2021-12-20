@@ -1,7 +1,8 @@
 value_of_r <- function(dat, r_var, ttt_var, out_y, 
                  pr_var_except_ttt,
                  f_pr_mod,
-                 f_ps_mod ) {
+                 f_ps_mod,
+                 seed) {
 
   
 ## Value of the rule APIWE E_Y^{s=1}
@@ -14,6 +15,8 @@ value_of_r <- function(dat, r_var, ttt_var, out_y,
 ## f_pr_mod: formula for the pronostic model always use -1 and add column name filled with ones if intercept is needed 
 ## f_ps_mod: formula for the propensity score model always use -1 and add column name filled with ones if intercept is needed
 ## 
+
+set.seed(seed)
   
   # Fit pronositc model
 pr_mod <- glm(f_pr_mod, data=dat, family = "binomial")
@@ -45,7 +48,8 @@ return(EY_s1)
 
 # Example
 
-# value_of_r(dat[10000:20000,], r_var = "r", ttt_var = "A", out_y = "Y", 
+ #value_of_r(dat, r_var = "r", ttt_var = "A", out_y = "Y", 
 #           pr_var_except_ttt = c("X.2", "X.3", "X.4", "X.5", "X.6"),
 #           f_pr_mod = formula(Y ~ -1 + A*X.2 + A*X.3 + A*X.4 + A*X.5 + A*X.6),
-#           f_ps_mod = formula(A ~ 1 + X.1 + X.2 + X.3 + X.4 + X.5)) 
+#           f_ps_mod = formula(A ~ 1 + X.1 + X.2 + X.3 + X.4 + X.5),
+#           seed=999) 

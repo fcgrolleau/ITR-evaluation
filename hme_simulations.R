@@ -3,7 +3,7 @@ source("hme optim.R")
 library(pracma)
 library(mvtnorm)
 
-set.seed(353)
+set.seed(1932)
 
 # Create a large super population
 largeN <- 10^6
@@ -27,17 +27,20 @@ delta <- c(.05, -.5, .5, -.5, .5, .0, 0)
 # True parameters for Psi(X)  
 zeta <- delta 
 
+#
+nvar <- 6
+O <- randortho(nvar, type = "orthonormal")
+D_mat <- matrix(0, nrow = nvar, ncol = nvar)
+diag(D_mat) <- seq(1, by=.2, length=nvar)
+Sigma <- O %*% D_mat %*% t(O)
+
 # Functions that takes sample size and true value of the parameters and outputs
 # a simulated data in dataframe format
 
-dgp <- function(n, alpha, beta, gamma, delta, zeta) {
-  # Generate Xs
+dgp <- function(n, alpha, beta, gamma, delta, zeta, Sigma) {
   
+  # Generate Xs
   nvar <- 6
-  O <- randortho(nvar, type = "orthonormal")
-  D_mat <- matrix(0, nrow = nvar, ncol = nvar)
-  diag(D_mat) <- seq(1, by=.2, length=nvar)
-  Sigma <- O %*% D_mat %*% t(O)
   X_temp <- rmvnorm(n, mean = rep(0, nrow(Sigma)), sigma = Sigma)
   X_temp[,1:2] <- as.numeric(X_temp[,1:2] < 0)
   X_temp[,3:5] <- exp(X_temp[,3:5])
@@ -79,12 +82,15 @@ dgp <- function(n, alpha, beta, gamma, delta, zeta) {
   return(data.frame(X=X, rho=rho, S=S, Pr_Ya1=Pr_Ya1, Pr_Ya0=Pr_Ya0, Y_s1=Y_s1, Y_s0=Y_s0, Y=Y, r=r, A=A, psi=psi, C=C))
 }
 
-superpop <- dgp(largeN, alpha, beta, gamma, delta, zeta)
-
+superpop <- dgp(largeN, alpha, beta, gamma, delta, zeta, Sigma)
+dat <- superpop[1000:2000,]
 TrueVals <- apply(superpop[, c("Y_s1", "Y_s0", "Y", "Pr_Ya0", "Pr_Ya1")], 2, mean) 
 TrueVals
 
-
+TrueEstimands <- data.frame(True_MIG=TrueVals["Y_s1"]-TrueVals["Y"],
+           True_ARE=TrueVals["Y_s1"]-TrueVals["Y_s0"],
+           True_AIE=TrueVals["Y"]-TrueVals["Y_s0"])
+TrueEstimands
 
 
 
