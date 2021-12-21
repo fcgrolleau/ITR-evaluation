@@ -124,7 +124,7 @@ try({
 
 }
 if(reached_maxit) {print("Reached maximum number of iterations")}
-if(converged) {print("Algorithm converged")}
+if(converged) {print(paste("Algorithm converged at iteration", i))}
 return(data.frame(Yk0_hat = Ys0_hat, Yk1_hat = Ys1_hat))
 }
 
