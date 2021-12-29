@@ -90,7 +90,7 @@ set.seed(seed)
 
 ### Simulation setup ###
 
-n_cores <- 2
+n_cores <- parallel::detectCores()
 
 n_sim <- 1000
 boot_resample <- 999
@@ -106,8 +106,8 @@ superpop_psi_different <- dgp(largeN, alpha, beta, gamma, delta, zeta=delta, Sig
 TrueVals_psi_different <- apply(superpop_psi_different[, c("Y_s1", "Y_s0", "Y", "Pr_Ya0", "Pr_Ya1")], 2, mean) 
 TrueVals_psi_different
 TrueEstimands_psi_different <- data.frame(True_MIG=TrueVals_psi_different["Y_s1"]-TrueVals_psi_different["Y"],
-           True_ARE=TrueVals_psi_different["Y_s1"]-TrueVals_psi_different["Y_s0"],
-           True_AIE=TrueVals_psi_different["Y"]-TrueVals_psi_different["Y_s0"])
+                                          True_ARE=TrueVals_psi_different["Y_s1"]-TrueVals_psi_different["Y_s0"],
+                                          True_AIE=TrueVals_psi_different["Y"]-TrueVals_psi_different["Y_s0"])
 
 TrueEstimands_psi_different
 
@@ -117,41 +117,41 @@ ub_ci_psi_different <- list()
 
 ss_it <- 0
 for (sample_size in sample_sizes){
-ss_it <- ss_it + 1
-
-estimates_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
-lb_ci_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
-ub_ci_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
-
-colnames(estimates_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
-colnames(lb_ci_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
-colnames(ub_ci_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
-
-x <- 1:nrow(superpop_psi_different);
-y <- seq(from = 1, to = nrow(superpop_psi_different), by = sample_size);
-indices <- sapply(split(x, f = findInterval(x = x, vec = y)), c)
-
-for (i in 1:n_sim) {
+  ss_it <- ss_it + 1
   
-  cat("last iteration took", as.numeric(difftime(end_time, start_time, unit="min")), "minutes\n")
-  start_time <- Sys.time()
-  cat("Currently running iteration", i, "of", n_sim, 
-      "\nSample Size: ", sample_size,
-      "\nr and psi different (situation 1)\n")
+  estimates_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
+  lb_ci_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
+  ub_ci_psi_different[[ss_it]] <- matrix(NA, nrow=n_sim, ncol=4)
   
-  res <- boot(superpop_psi_different[indices[, i], ], parallel="multicore", ncpus=n_cores,
-              estimators_boot,
-              R=boot_resample,
-              epsilon = 10^-2, maxit=10, verbose = FALSE, seed=seed)
+  colnames(estimates_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
+  colnames(lb_ci_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
+  colnames(ub_ci_psi_different[[ss_it]]) <- c("MIG", "ARE_MOE", "ARE_COMB", "AIE")
   
-  estimates_psi_different[[ss_it]][i,] <- round(res$t0, prec)
-  ci <- round(emp_boot_ci(t0 = res$t0, t = res$t), prec)
-  lb_ci_psi_different[[ss_it]][i,] <- ci[1,]
-  ub_ci_psi_different[[ss_it]][i,] <- ci[2,]
+  x <- 1:nrow(superpop_psi_different);
+  y <- seq(from = 1, to = nrow(superpop_psi_different), by = sample_size);
+  indices <- sapply(split(x, f = findInterval(x = x, vec = y)), c)
   
-  end_time <- Sys.time()
-  cat('\014')
-}
+  for (i in 1:n_sim) {
+    
+    cat("last iteration took", as.numeric(difftime(end_time, start_time, unit="min")), "minutes\n")
+    start_time <- Sys.time()
+    cat("Currently running iteration", i, "of", n_sim, 
+        "\nSample Size: ", sample_size,
+        "\nr and psi different (situation 1)\n")
+    
+    res <- boot(superpop_psi_different[indices[, i], ], parallel="multicore", ncpus=n_cores,
+                estimators_boot,
+                R=boot_resample,
+                epsilon = 10^-2, maxit=10, verbose = FALSE, seed=seed)
+    
+    estimates_psi_different[[ss_it]][i,] <- round(res$t0, prec)
+    ci <- round(emp_boot_ci(t0 = res$t0, t = res$t), prec)
+    lb_ci_psi_different[[ss_it]][i,] <- ci[1,]
+    ub_ci_psi_different[[ss_it]][i,] <- ci[2,]
+    
+    end_time <- Sys.time()
+    cat('\014')
+  }
 }
 
 save.image(file="end_first_scenario.RData")
@@ -164,8 +164,8 @@ superpop_psi_random <- dgp(largeN, alpha, beta, gamma, delta, zeta=rep(0,7), Sig
 TrueVals_psi_random <- apply(superpop_psi_random[, c("Y_s1", "Y_s0", "Y", "Pr_Ya0", "Pr_Ya1")], 2, mean) 
 TrueVals_psi_random
 TrueEstimands_psi_random <- data.frame(True_MIG=TrueVals_psi_random["Y_s1"]-TrueVals_psi_random["Y"],
-                                            True_ARE=TrueVals_psi_random["Y_s1"]-TrueVals_psi_random["Y_s0"],
-                                            True_AIE=TrueVals_psi_random["Y"]-TrueVals_psi_random["Y_s0"])
+                                       True_ARE=TrueVals_psi_random["Y_s1"]-TrueVals_psi_random["Y_s0"],
+                                       True_AIE=TrueVals_psi_random["Y"]-TrueVals_psi_random["Y_s0"])
 TrueEstimands_psi_random
 
 estimates_psi_random <- list()
@@ -219,8 +219,8 @@ superpop_psi_similar <- dgp(largeN, alpha, beta, gamma, delta, zeta=- delta, Sig
 TrueVals_psi_similar <- apply(superpop_psi_similar[, c("Y_s1", "Y_s0", "Y", "Pr_Ya0", "Pr_Ya1")], 2, mean) 
 TrueVals_psi_similar
 TrueEstimands_psi_similar <- data.frame(True_MIG=TrueVals_psi_similar["Y_s1"]-TrueVals_psi_similar["Y"],
-                                       True_ARE=TrueVals_psi_similar["Y_s1"]-TrueVals_psi_similar["Y_s0"],
-                                       True_AIE=TrueVals_psi_similar["Y"]-TrueVals_psi_similar["Y_s0"])
+                                        True_ARE=TrueVals_psi_similar["Y_s1"]-TrueVals_psi_similar["Y_s0"],
+                                        True_AIE=TrueVals_psi_similar["Y"]-TrueVals_psi_similar["Y_s0"])
 TrueEstimands_psi_similar
 
 estimates_psi_similar <- list()

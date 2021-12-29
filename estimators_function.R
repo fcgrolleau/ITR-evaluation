@@ -76,9 +76,6 @@ emp_boot_ci <-  function(t0, t, alpha=.05){
   return( temp ) 
 }
 
-t0 <- res$t0
-t <- res$t
-
 
   
 # Example
